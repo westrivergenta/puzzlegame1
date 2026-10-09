@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E4E8F0">
+<style>
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);height:100%}
+body{margin:0;font-size:14px}
+[hidden]{display:none!important}
+</style>
+<title>スワップ4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
+<style>
+/* Layout: 携帯ゲーム機の筐体 — 上にスコア帯、中央に白いフィールド、左下に円形パッド、右下に入替ボタン */
+:root{
+  --body:#E4E8F0;
+  --body-2:#CBD2DF;
+  --ink:#1B1F2C;
+  --muted:#5A6378;
+  --field:#FFFFFF;
+  --pad:#2A2E3A;
+  --pad-2:#41475A;
+  --swap:#E63946;
+  --swap-dark:#9E1820;
+  --danger:#E63946;
+  --display:'Dela Gothic One','Hiragino Sans','Yu Gothic',system-ui,sans-serif;
+  --text:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic',system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--body);color:var(--ink);font-family:var(--text);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+#app{height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;padding-inline:16px;padding-block:10px 14px;max-width:520px;margin:0 auto;position:relative}
+
+header{display:flex;align-items:flex-end;gap:16px}
+.stat{display:flex;flex-direction:column;gap:2px;line-height:1}
+.lab{font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--muted)}
+.val{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.val.small{font-size:16px}
+.grow{flex:1}
+.iconbtn{width:40px;height:40px;border-radius:12px;border:0;background:var(--body-2);color:var(--ink);font:800 15px var(--text);display:grid;place-items:center;cursor:pointer}
+.iconbtn:focus-visible,button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+#wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+#frame{position:relative;border-radius:8px;padding:4px;background:var(--ink);box-shadow:0 6px 0 var(--body-2)}
+#frame.shake{animation:shake .12s linear infinite}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+#field{display:block;background:var(--field);border-radius:5px}
+
+.controls{display:flex;justify-content:space-between;align-items:center;height:clamp(132px,23vh,184px);padding-inline:4px}
+#pad{position:relative;width:clamp(120px,36vw,156px);aspect-ratio:1;max-width:100%;border-radius:50%;background:radial-gradient(circle at 50% 38%,var(--pad-2),var(--pad) 70%);box-shadow:0 6px 0 #14161D,inset 0 2px 0 rgba(255,255,255,.12);touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:34%;aspect-ratio:1;margin:-17% 0 0 -17%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#5B6278,#30343F);box-shadow:0 3px 0 #14161D;transition:transform .06s;pointer-events:none}
+.arrow{position:absolute;width:0;height:0;border:9px solid transparent;opacity:.55;pointer-events:none;transition:opacity .06s}
+.arrow.on{opacity:1}
+.a-up{left:50%;top:9%;margin-left:-9px;border-bottom:12px solid #fff;border-top:0}
+.a-down{left:50%;bottom:9%;margin-left:-9px;border-top:12px solid #fff;border-bottom:0}
+.a-left{top:50%;left:9%;margin-top:-9px;border-right:12px solid #fff;border-left:0}
+.a-right{top:50%;right:9%;margin-top:-9px;border-left:12px solid #fff;border-right:0}
+
+#swap{width:clamp(96px,28vw,124px);aspect-ratio:1;max-width:100%;border-radius:50%;border:0;background:radial-gradient(circle at 45% 35%,#FF6B73,var(--swap) 60%);color:#fff;box-shadow:0 7px 0 var(--swap-dark),inset 0 2px 0 rgba(255,255,255,.25);font-family:var(--display);font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;touch-action:none;transition:transform .05s,box-shadow .05s}
+#swap .sym{font-size:26px;line-height:1}
+#swap.down{transform:translateY(5px);box-shadow:0 2px 0 var(--swap-dark),inset 0 2px 0 rgba(255,255,255,.25)}
+
+/* overlays */
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding-inline:16px;background:rgba(228,232,240,.86);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:5}
+.panel{width:100%;max-width:360px;background:var(--field);border-radius:18px;box-shadow:0 0 0 3px var(--ink),0 8px 0 3px var(--body-2);padding:22px 20px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
+.logo{font-family:var(--display);font-size:38px;line-height:1;text-align:center;letter-spacing:.02em}
+.logo .four{display:inline-block;background:var(--swap);color:#fff;border-radius:10px;padding:2px 10px;margin-left:4px;transform:rotate(-4deg)}
+.swatches{display:flex;justify-content:center;gap:6px}
+.swatches i{width:18px;height:18px;border-radius:5px;display:block}
+.howto{font-size:13px;line-height:1.7;color:var(--muted);text-align:center;margin:0}
+.settings{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.row > span{font-size:13px;font-weight:800}
+.seg{display:flex;background:var(--body);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;font:700 13px var(--text);color:var(--muted);padding:6px 10px;border-radius:8px;cursor:pointer;font-variant-numeric:tabular-nums}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.big{border:0;border-radius:14px;background:var(--swap);color:#fff;font-family:var(--display);font-size:20px;padding:14px;box-shadow:0 5px 0 var(--swap-dark);cursor:pointer}
+.big:active{transform:translateY(3px);box-shadow:0 2px 0 var(--swap-dark)}
+.sub{border:0;border-radius:12px;background:var(--body);color:var(--ink);font:800 15px var(--text);padding:12px;cursor:pointer}
+.result{display:flex;justify-content:space-around;text-align:center}
+.result .val{font-size:30px}
+h2{font-family:var(--display);font-size:28px;margin:0;text-align:center;font-weight:400}
+@media (prefers-reduced-motion:reduce){#frame.shake{animation:none}}
+</style>
+</head>
+<body>
+
+
+<div id="app">
+  <header>
+    <div class="stat"><span class="lab">SCORE</span><span class="val" id="score">0</span></div>
+    <div class="stat"><span class="lab">LEVEL</span><span class="val small" id="level">1</span></div>
+    <div class="stat"><span class="lab">BEST</span><span class="val small" id="best">0</span></div>
+    <div class="grow"></div>
+    <button class="iconbtn" id="pauseBtn" aria-label="一時停止">Ⅱ</button>
+  </header>
+
+  <div id="wrap"><div id="frame"><canvas id="field"></canvas></div></div>
+
+  <div class="controls">
+    <div id="pad" role="group" aria-label="カーソル移動">
+      <span class="arrow a-up" data-d="up"></span>
+      <span class="arrow a-down" data-d="down"></span>
+      <span class="arrow a-left" data-d="left"></span>
+      <span class="arrow a-right" data-d="right"></span>
+      <div id="knob"></div>
+    </div>
+    <button id="swap" aria-label="入れ替え"><span class="sym">⇄</span><span>入替</span></button>
+  </div>
+
+  <!-- start -->
+  <div class="overlay" id="startOv">
+    <div class="panel">
+      <div class="logo">スワップ<span class="four">4</span></div>
+      <div class="swatches" id="swatches"></div>
+      <p class="howto">左のパッドでカーソルを動かし、右のボタンで左右を入れ替え。<br>同じ色を縦か横に4つ並べると消えます。<br>ブロックが一番上に届いたらゲームオーバー。</p>
+      <div class="settings">
+        <div class="row"><span>色の数</span><div class="seg" data-key="ncol"><button data-v="4">4</button><button data-v="5">5</button><button data-v="6">6</button></div></div>
+        <div class="row"><span>横マス</span><div class="seg" data-key="cols"><button data-v="6">6</button><button data-v="7">7</button><button data-v="8">8</button></div></div>
+        <div class="row"><span>縦マス</span><div class="seg" data-key="rows"><button data-v="12">12</button><button data-v="14">14</button><button data-v="16">16</button></div></div>
+        <div class="row"><span>速さ</span><div class="seg" data-key="speed"><button data-v="0">ゆっくり</button><button data-v="1">ふつう</button><button data-v="2">はやい</button></div></div>
+      </div>
+      <button class="big" id="startBtn">スタート</button>
+    </div>
+  </div>
+
+  <!-- pause -->
+  <div class="overlay" id="pauseOv" hidden>
+    <div class="panel">
+      <h2>一時停止</h2>
+      <button class="big" id="resumeBtn">再開</button>
+      <button class="sub" id="quitBtn">タイトルへ戻る</button>
+    </div>
+  </div>
+
+  <!-- game over -->
+  <div class="overlay" id="overOv" hidden>
+    <div class="panel">
+      <h2>ゲームオーバー</h2>
+      <div class="result">
+        <div class="stat"><span class="lab">SCORE</span><span class="val" id="rScore">0</span></div>
+        <div class="stat"><span class="lab">最大連鎖</span><span class="val" id="rChain">0</span></div>
+      </div>
+      <div class="stat" style="align-items:center"><span class="lab" id="rBest">BEST 0</span></div>
+      <button class="big" id="retryBtn">もう一度</button>
+      <button class="sub" id="titleBtn">設定を変える</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+/* ===== 調整用の定数 ===== */
+const COLORS = [
+  { name:'赤', fill:'#E63946', hi:'#FF7A82', lo:'#A3161F', sym:'circle',   symc:'rgba(255,255,255,.85)' },
+  { name:'青', fill:'#2F6BFF', hi:'#7BA2FF', lo:'#1A3FA8', sym:'diamond',  symc:'rgba(255,255,255,.85)' },
+  { name:'黄', fill:'#FFC21A', hi:'#FFE07A', lo:'#B37E00', sym:'triangle', symc:'rgba(120,80,0,.7)' },
+  { name:'緑', fill:'#21B573', hi:'#6EDCA8', lo:'#127548', sym:'square',   symc:'rgba(255,255,255,.85)' },
+  { name:'紫', fill:'#9346F0', hi:'#C49BFF', lo:'#5A1FAD', sym:'star',     symc:'rgba(255,255,255,.85)' },
+  { name:'黒', fill:'#2A2C33', hi:'#5B5F6B', lo:'#0C0D10', sym:'cross',    symc:'rgba(255,255,255,.8)' },
+];
+const SPEEDS = [0.10, 0.16, 0.26];   // 1秒あたりにせり上がる段数（レベル1）
+const LEVEL_SEC = 20;                 // 何秒ごとにレベルが上がるか
+const LEVEL_GAIN = 0.12;              // レベル1つごとの速度上昇率
+const MATCH = 4;                      // 何個並ぶと消えるか
+const CLEAR_T = 0.5;                  // 消える演出の時間（秒）
+const GRAV_STEP = 0.055;              // 1マス落ちる時間（秒）
+const SWAP_T = 0.08;
+const GRACE = 2.5;                    // 一番上に届いてからゲームオーバーまでの猶予（秒）
+const START_ROWS = 6;
+
+/* ===== 設定・保存 ===== */
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+const cfg = Object.assign({ ncol:6, cols:7, rows:14, speed:1 }, store.get('swap4.cfg', {}));
+let best = store.get('swap4.best', 0);
+
+/* ===== DOM ===== */
+const $ = id => document.getElementById(id);
+const canvas = $('field'), ctx = canvas.getContext('2d');
+const frame = $('frame');
+const elScore = $('score'), elLevel = $('level'), elBest = $('best');
+elBest.textContent = best;
+
+/* ===== 状態 ===== */
+let S = null, cell = 32, dpr = 1;
+
+function newState(){
+  const cols = cfg.cols, rows = cfg.rows, n = cols*rows;
+  return {
+    cols, rows, ncol: cfg.ncol,
+    grid: new Int8Array(n).fill(-1),
+    clr: new Float32Array(n),
+    fall: new Float32Array(n),
+    next: [],
+    cx: Math.floor((cols-2)/2), cy: rows - 4,
+    offset: 0, score: 0, chain: 1, maxChain: 0, pendingChain: false,
+    level: 1, time: 0, stop: 0, danger: 0,
+    falling: false, gravAcc: 0,
+    swap: null, popups: [],
+    padDir: null, padNext: 0,
+    mode: 'title'
+  };
+}
+const idx = (r,c) => r*S.cols + c;
+const rnd = () => Math.floor(Math.random()*S.ncol);
+
+function pickColor(avoidSets){
+  let tries = 0, col;
+  do { col = rnd(); tries++; } while (avoidSets.includes(col) && tries < 30);
+  return col;
+}
+
+// 下から上がってくる1段を作る（その段だけで4つ並ばないように）
+function genRow(){
+  const row = [];
+  for (let c=0;c<S.cols;c++){
+    const avoid = [];
+    if (c >= MATCH-1){
+      const a = row[c-1];
+      let same = true; for (let k=2;k<MATCH;k++) if (row[c-k] !== a) same = false;
+      if (same) avoid.push(a);
+    }
+    // 現在の最下段との縦並びも避ける
+    const below = []; for (let k=0;k<MATCH-1;k++) below.push(S.grid[idx(S.rows-1-k, c)]);
+    if (below[0] >= 0 && below.every(v => v === below[0])) avoid.push(below[0]);
+    row.push(pickColor(avoid));
+  }
+  return row;
+}
+
+function fillInitial(){
+  for (let c=0;c<S.cols;c++){
+    const h = START_ROWS - 1 + Math.floor(Math.random()*3) - (c%2 ? 0 : 1);
+    for (let k=0;k<h;k++){
+      const r = S.rows-1-k, avoid = [];
+      if (c >= MATCH-1){
+        const a = S.grid[idx(r,c-1)];
+        let same = a >= 0; for (let j=2;j<MATCH;j++) if (S.grid[idx(r,c-j)] !== a) same = false;
+        if (same) avoid.push(a);
+      }
+      if (k >= MATCH-1){
+        const a = S.grid[idx(r+1,c)];
+        let same = true; for (let j=2;j<MATCH;j++) if (S.grid[idx(r+j,c)] !== a) same = false;
+        if (same) avoid.push(a);
+      }
+      S.grid[idx(r,c)] = pickColor(avoid);
+    }
+  }
+  S.next = genRow();
+}
+
+/* ===== ゲームロジック ===== */
+function rowEmpty(r){ for (let c=0;c<S.cols;c++) if (S.grid[idx(r,c)] >= 0) return false; return true; }
+function anyClearing(){ for (let i=0;i<S.clr.length;i++) if (S.clr[i] > 0) return true; return false; }
+
+function gravityStep(){
+  let moved = false;
+  for (let r=S.rows-2;r>=0;r--){
+    for (let c=0;c<S.cols;c++){
+      const i = idx(r,c), b = idx(r+1,c);
+      if (S.grid[i] >= 0 && S.clr[i] === 0 && S.grid[b] < 0){
+        S.grid[b] = S.grid[i]; S.grid[i] = -1;
+        S.fall[b] = 1; S.fall[i] = 0;
+        moved = true;
+      }
+    }
+  }
+  return moved;
+}
+
+function supported(r,c){ return r === S.rows-1 || S.grid[idx(r+1,c)] >= 0; }
+function active(r,c){ const i = idx(r,c); return S.grid[i] >= 0 && S.clr[i] === 0 && supported(r,c); }
+
+function checkMatches(){
+  const mark = new Uint8Array(S.grid.length);
+  // 横
+  for (let r=0;r<S.rows;r++){
+    let c = 0;
+    while (c < S.cols){
+      if (!active(r,c)){ c++; continue; }
+      const col = S.grid[idx(r,c)]; let e = c+1;
+      while (e < S.cols && active(r,e) && S.grid[idx(r,e)] === col) e++;
+      if (e - c >= MATCH) for (let k=c;k<e;k++) mark[idx(r,k)] = 1;
+      c = e;
+    }
+  }
+  // 縦
+  for (let c=0;c<S.cols;c++){
+    let r = 0;
+    while (r < S.rows){
+      if (!active(r,c)){ r++; continue; }
+      const col = S.grid[idx(r,c)]; let e = r+1;
+      while (e < S.rows && active(e,c) && S.grid[idx(e,c)] === col) e++;
+      if (e - r >= MATCH) for (let k=r;k<e;k++) mark[idx(k,c)] = 1;
+      r = e;
+    }
+  }
+  let n = 0, sx = 0, sy = 0;
+  for (let i=0;i<mark.length;i++) if (mark[i]){ n++; S.clr[i] = CLEAR_T; sx += i % S.cols; sy += Math.floor(i / S.cols); }
+  if (n){
+    if (S.pendingChain) S.chain++;
+    else if (!anyClearingExcept(mark)) S.chain = 1;
+    S.pendingChain = false;
+    S.maxChain = Math.max(S.maxChain, S.chain);
+    const pts = n*10*S.chain + (n - MATCH)*20;
+    S.score += pts;
+    S.stop = Math.max(S.stop, 0.8 + 0.35*(S.chain-1));
+    S.popups.push({ x:(sx/n + .5), y:(sy/n + .5), text: S.chain > 1 ? `${S.chain}連鎖!` : `+${pts}`, sub: S.chain > 1 ? `+${pts}` : (n > MATCH ? `${n}個消し` : ''), t:0 });
+    try { navigator.vibrate && navigator.vibrate(S.chain > 1 ? [15,40,15] : 12); } catch(e){}
+  } else if (!anyClearing()){
+    S.pendingChain = false;
+  }
+}
+function anyClearingExcept(mark){
+  for (let i=0;i<S.clr.length;i++) if (S.clr[i] > 0 && !mark[i]) return true;
+  return false;
+}
+
+function shiftUp(){
+  for (let r=0;r<S.rows-1;r++){
+    for (let c=0;c<S.cols;c++){
+      const a = idx(r,c), b = idx(r+1,c);
+      S.grid[a] = S.grid[b]; S.clr[a] = S.clr[b]; S.fall[a] = S.fall[b];
+    }
+  }
+  for (let c=0;c<S.cols;c++){ const i = idx(S.rows-1,c); S.grid[i] = S.next[c]; S.clr[i] = 0; S.fall[i] = 0; }
+  S.next = genRow();
+  S.cy = Math.max(0, S.cy - 1);
+  S.swap = null;
+  for (const p of S.popups) p.y -= 1;
+}
+
+function rise(dt){
+  if (!rowEmpty(0)){
+    S.offset = 0;
+    S.danger += dt;
+    if (S.danger >= GRACE) gameOver();
+    return;
+  }
+  S.danger = 0;
+  const speed = SPEEDS[cfg.speed] * (1 + LEVEL_GAIN*(S.level-1));
+  S.offset += speed*dt;
+  if (S.offset >= 1){
+    shiftUp();
+    S.offset = rowEmpty(0) ? S.offset - 1 : 0;
+  }
+}
+
+function update(dt){
+  S.time += dt;
+  S.level = 1 + Math.floor(S.time / LEVEL_SEC);
+
+  let clearing = false, finished = false;
+  for (let i=0;i<S.clr.length;i++){
+    if (S.clr[i] > 0){
+      S.clr[i] -= dt; clearing = true;
+      if (S.clr[i] <= 0){ S.clr[i] = 0; S.grid[i] = -1; finished = true; }
+    }
+    if (S.fall[i] > 0) S.fall[i] = Math.max(0, S.fall[i] - dt/GRAV_STEP);
+  }
+  if (finished) S.pendingChain = true;
+
+  S.gravAcc += dt;
+  while (S.gravAcc >= GRAV_STEP){ S.gravAcc -= GRAV_STEP; S.falling = gravityStep(); }
+  if (!S.falling) checkMatches();
+
+  if (!clearing && !S.falling && !anyClearing()){
+    if (S.stop > 0) S.stop -= dt; else rise(dt);
+  }
+
+  if (S.swap){ S.swap.t += dt / SWAP_T; if (S.swap.t >= 1) S.swap = null; }
+  for (const p of S.popups) p.t += dt;
+  S.popups = S.popups.filter(p => p.t < 1);
+
+  if (S.padDir && S.time >= S.padNext){ moveCursor(S.padDir); S.padNext = S.time + 0.075; }
+
+  frame.classList.toggle('shake', S.danger > 0);
+  elScore.textContent = S.score;
+  elLevel.textContent = S.level;
+}
+
+/* ===== 操作 ===== */
+function moveCursor(d){
+  if (!S || S.mode !== 'play') return;
+  if (d === 'left')  S.cx = Math.max(0, S.cx-1);
+  if (d === 'right') S.cx = Math.min(S.cols-2, S.cx+1);
+  if (d === 'up')    S.cy = Math.max(0, S.cy-1);
+  if (d === 'down')  S.cy = Math.min(S.rows-1, S.cy+1);
+}
+function doSwap(){
+  if (!S || S.mode !== 'play') return;
+  const a = idx(S.cy, S.cx), b = a + 1;
+  if (S.clr[a] > 0 || S.clr[b] > 0) return;
+  if (S.grid[a] < 0 && S.grid[b] < 0) return;
+  const t = S.grid[a]; S.grid[a] = S.grid[b]; S.grid[b] = t;
+  S.fall[a] = 0; S.fall[b] = 0;
+  S.swap = { r:S.cy, c:S.cx, t:0 };
+}
+
+/* 円形パッド */
+const pad = $('pad'), knob = $('knob');
+const arrows = [...pad.querySelectorAll('.arrow')];
+let padPointer = null;
+function padDirFrom(e){
+  const r = pad.getBoundingClientRect();
+  const dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
+  const dist = Math.hypot(dx, dy), rad = r.width/2;
+  const k = Math.min(1, dist/rad) * 0.28 * r.width;
+  knob.style.transform = dist > 0 ? `translate(${dx/dist*k}px, ${dy/dist*k}px)` : '';
+  if (dist < rad*0.16) return null;
+  return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+}
+function setPadDir(d){
+  if (!S) return;
+  if (d !== S.padDir){
+    S.padDir = d;
+    if (d){ moveCursor(d); S.padNext = S.time + 0.2; }
+  }
+  arrows.forEach(a => a.classList.toggle('on', a.dataset.d === d));
+}
+pad.addEventListener('pointerdown', e => { e.preventDefault(); padPointer = e.pointerId; try{ pad.setPointerCapture(e.pointerId); }catch(_){} setPadDir(padDirFrom(e)); });
+pad.addEventListener('pointermove', e => { if (e.pointerId === padPointer) setPadDir(padDirFrom(e)); });
+const padEnd = e => { if (e.pointerId !== padPointer) return; padPointer = null; knob.style.transform = ''; setPadDir(null); };
+pad.addEventListener('pointerup', padEnd);
+pad.addEventListener('pointercancel', padEnd);
+
+/* 入替ボタン */
+const swapBtn = $('swap');
+swapBtn.addEventListener('pointerdown', e => { e.preventDefault(); swapBtn.classList.add('down'); doSwap(); });
+['pointerup','pointercancel','pointerleave'].forEach(t => swapBtn.addEventListener(t, () => swapBtn.classList.remove('down')));
+swapBtn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doSwap(); } });
+
+/* キーボード（PCで試す用） */
+const keyMap = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down', a:'left', d:'right', w:'up', s:'down' };
+window.addEventListener('keydown', e => {
+  if (keyMap[e.key]){ e.preventDefault(); moveCursor(keyMap[e.key]); }
+  else if (e.key === ' ' || e.key === 'z' || e.key === 'x'){ e.preventDefault(); doSwap(); }
+  else if (e.key === 'Escape' || e.key === 'p'){ if (S && S.mode === 'play') pause(); else if (S && S.mode === 'pause') resume(); }
+});
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('visibilitychange', () => { if (document.hidden && S && S.mode === 'play') pause(); });
+
+/* ===== 描画 ===== */
+function layout(){
+  const wrap = $('wrap').getBoundingClientRect();
+  const cols = S ? S.cols : cfg.cols, rows = S ? S.rows : cfg.rows;
+  cell = Math.max(12, Math.floor(Math.min((wrap.width-8)/cols, (wrap.height-14)/rows)));
+  dpr = Math.min(3, window.devicePixelRatio || 1);
+  canvas.style.width = cell*cols + 'px';
+  canvas.style.height = cell*rows + 'px';
+  canvas.width = Math.round(cell*cols*dpr);
+  canvas.height = Math.round(cell*rows*dpr);
+  draw();
+}
+new ResizeObserver(layout).observe($('wrap'));
+
+function rr(x,y,w,h,r){
+  ctx.beginPath();
+  if (w <= 0 || h <= 0) return;
+  r = Math.max(0, Math.min(r, w/2, h/2));
+  ctx.roundRect ? ctx.roundRect(x,y,w,h,r) : ctx.rect(x,y,w,h);
+}
+
+function drawSymbol(type, cx, cy, s, color){
+  ctx.fillStyle = color; ctx.strokeStyle = color;
+  ctx.beginPath();
+  if (type === 'circle'){ ctx.arc(cx, cy, s*.55, 0, Math.PI*2); ctx.lineWidth = s*.28; ctx.stroke(); return; }
+  if (type === 'diamond'){ ctx.moveTo(cx, cy-s*.75); ctx.lineTo(cx+s*.62, cy); ctx.lineTo(cx, cy+s*.75); ctx.lineTo(cx-s*.62, cy); }
+  if (type === 'triangle'){ ctx.moveTo(cx, cy-s*.7); ctx.lineTo(cx+s*.72, cy+s*.55); ctx.lineTo(cx-s*.72, cy+s*.55); }
+  if (type === 'square'){ ctx.rect(cx-s*.52, cy-s*.52, s*1.04, s*1.04); }
+  if (type === 'star'){
+    for (let k=0;k<10;k++){ const a = -Math.PI/2 + k*Math.PI/5, rad = k%2 ? s*.36 : s*.8; ctx.lineTo(cx+Math.cos(a)*rad, cy+Math.sin(a)*rad); }
+  }
+  if (type === 'cross'){ ctx.lineWidth = s*.3; ctx.lineCap = 'round'; ctx.moveTo(cx-s*.5, cy-s*.5); ctx.lineTo(cx+s*.5, cy+s*.5); ctx.moveTo(cx+s*.5, cy-s*.5); ctx.lineTo(cx-s*.5, cy+s*.5); ctx.stroke(); return; }
+  ctx.closePath(); ctx.fill();
+}
+
+function drawBlock(col, x, y, size, alpha=1, flash=0){
+  const C = COLORS[col], pad = Math.max(1, size*.06), w = size - pad*2, rad = size*.2;
+  if (!C || w <= 1) return;
+  ctx.globalAlpha = alpha;
+  const g = ctx.createLinearGradient(0, y+pad, 0, y+pad+w);
+  g.addColorStop(0, C.hi); g.addColorStop(.45, C.fill); g.addColorStop(1, C.lo);
+  rr(x+pad, y+pad, w, w, rad); ctx.fillStyle = g; ctx.fill();
+  rr(x+pad+w*.12, y+pad+w*.08, w*.76, w*.16, w*.08); ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fill();
+  drawSymbol(C.sym, x+size/2, y+size/2 + size*.03, size*.22, C.symc);
+  if (flash){ rr(x+pad, y+pad, w, w, rad); ctx.fillStyle = `rgba(255,255,255,${flash})`; ctx.fill(); }
+  ctx.globalAlpha = 1;
+}
+
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const cols = S ? S.cols : cfg.cols, rows = S ? S.rows : cfg.rows;
+  const W = cell*cols, H = cell*rows;
+  ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0,0,W,H);
+  if (!S) return;
+  const off = S.offset*cell;
+
+  // 危険ライン
+  let hot = 0; for (let r=0;r<3;r++) if (!rowEmpty(r)) { hot = 3 - r; break; }
+  if (hot){
+    const pulse = .5 + .5*Math.sin(performance.now()/120);
+    const g = ctx.createLinearGradient(0,0,0,cell*3);
+    g.addColorStop(0, `rgba(230,57,70,${.10 + .14*pulse*hot/3})`); g.addColorStop(1, 'rgba(230,57,70,0)');
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,cell*3);
+  }
+
+  // マス目
+  ctx.strokeStyle = '#EEF1F6'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let c=1;c<cols;c++){ ctx.moveTo(c*cell+.5, 0); ctx.lineTo(c*cell+.5, H); }
+  for (let r=1;r<=rows;r++){ const y = Math.round(r*cell - off)+.5; ctx.moveTo(0,y); ctx.lineTo(W,y); }
+  ctx.stroke();
+
+  // ブロック
+  const now = performance.now();
+  for (let r=0;r<rows;r++){
+    for (let c=0;c<cols;c++){
+      const i = idx(r,c), col = S.grid[i];
+      if (col < 0) continue;
+      let x = c*cell, y = r*cell - off - S.fall[i]*cell;
+      if (S.swap && S.swap.r === r && (S.swap.c === c || S.swap.c+1 === c)){
+        const e = 1 - S.swap.t, dir = S.swap.c === c ? 1 : -1;
+        x += dir*e*cell;
+      }
+      if (S.clr[i] > 0){
+        const p = 1 - S.clr[i]/CLEAR_T;
+        if (p < .6){ drawBlock(col, x, y, cell, 1, Math.floor(now/70)%2 ? .75 : 0); }
+        else { const s = 1 - (p-.6)/.4; const sz = cell*s; drawBlock(col, x+(cell-sz)/2, y+(cell-sz)/2, sz, s); }
+      } else drawBlock(col, x, y, cell);
+    }
+  }
+  // 次の段（プレビュー）
+  for (let c=0;c<cols;c++) drawBlock(S.next[c], c*cell, rows*cell - off, cell, .35);
+  if (off > 0){ ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fillRect(0, rows*cell - off, W, off); }
+
+  // カーソル
+  if (S.mode === 'play' || S.mode === 'pause'){
+    const x = S.cx*cell, y = S.cy*cell - off, lw = Math.max(3, cell*.1);
+    ctx.lineWidth = lw; ctx.strokeStyle = '#1B1F2C';
+    rr(x+lw/2, y+lw/2, cell*2-lw, cell-lw, cell*.18); ctx.stroke();
+    ctx.lineWidth = Math.max(1.5, lw*.4); ctx.strokeStyle = '#FFFFFF';
+    rr(x+lw*1.1, y+lw*1.1, cell*2-lw*2.2, cell-lw*2.2, cell*.12); ctx.stroke();
+    // 中央の区切り
+    ctx.fillStyle = '#1B1F2C';
+    ctx.fillRect(x+cell-1, y+cell*.3, 2, cell*.4);
+  }
+
+  // ポップアップ
+  for (const p of S.popups){
+    const a = 1 - p.t, px = p.x*cell, py = p.y*cell - off - p.t*cell*1.2;
+    ctx.globalAlpha = a; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `400 ${Math.round(cell*.62)}px ${getComputedStyle(document.documentElement).getPropertyValue('--display')}`;
+    ctx.lineWidth = 5; ctx.strokeStyle = '#FFFFFF'; ctx.strokeText(p.text, px, py);
+    ctx.fillStyle = '#1B1F2C'; ctx.fillText(p.text, px, py);
+    if (p.sub){
+      ctx.font = `800 ${Math.round(cell*.38)}px ${getComputedStyle(document.documentElement).getPropertyValue('--text')}`;
+      ctx.strokeText(p.sub, px, py + cell*.55); ctx.fillStyle = '#E63946'; ctx.fillText(p.sub, px, py + cell*.55);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // 猶予ゲージ
+  if (S.danger > 0){
+    const w = W * (1 - S.danger/GRACE);
+    ctx.fillStyle = '#E63946'; ctx.fillRect(0, 0, w, Math.max(4, cell*.12));
+  }
+}
+
+/* ===== 画面遷移 ===== */
+let last = 0, raf = 0;
+function loop(t){
+  raf = requestAnimationFrame(loop);
+  const dt = Math.min(0.05, (t - last)/1000 || 0); last = t;
+  try {
+    if (S && S.mode === 'play') update(dt);
+    draw();
+  } catch (err) { console.error(err); }
+}
+
+function start(){
+  store.set('swap4.cfg', cfg);
+  S = newState(); fillInitial(); S.mode = 'play';
+  elScore.textContent = 0; elLevel.textContent = 1;
+  $('startOv').hidden = true; $('overOv').hidden = true; $('pauseOv').hidden = true;
+  layout();
+}
+function pause(){ S.mode = 'pause'; $('pauseOv').hidden = false; setPadDir(null); }
+function resume(){ S.mode = 'play'; $('pauseOv').hidden = true; }
+function toTitle(){
+  if (S) S.mode = 'title';
+  frame.classList.remove('shake');
+  $('pauseOv').hidden = true; $('overOv').hidden = true; $('startOv').hidden = false;
+}
+function gameOver(){
+  S.mode = 'over'; setPadDir(null);
+  frame.classList.remove('shake');
+  if (S.score > best){ best = S.score; store.set('swap4.best', best); elBest.textContent = best; }
+  $('rScore').textContent = S.score;
+  $('rChain').textContent = S.maxChain;
+  $('rBest').textContent = 'BEST ' + best;
+  setTimeout(() => { $('overOv').hidden = false; }, 500);
+}
+
+$('startBtn').onclick = start;
+$('retryBtn').onclick = start;
+$('titleBtn').onclick = toTitle;
+$('pauseBtn').onclick = () => { if (S && S.mode === 'play') pause(); };
+$('resumeBtn').onclick = resume;
+$('quitBtn').onclick = toTitle;
+
+/* 設定ボタン */
+function renderSettings(){
+  document.querySelectorAll('.seg').forEach(seg => {
+    const key = seg.dataset.key;
+    seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === cfg[key])));
+  });
+  $('swatches').innerHTML = COLORS.slice(0, cfg.ncol).map(c => `<i style="background:${c.fill}"></i>`).join('');
+}
+document.querySelectorAll('.seg').forEach(seg => {
+  seg.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    cfg[seg.dataset.key] = Number(b.dataset.v);
+    store.set('swap4.cfg', cfg);
+    renderSettings();
+    if (!S || S.mode === 'title'){ S = null; layout(); }
+  });
+});
+renderSettings();
+layout();
+raf = requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>
