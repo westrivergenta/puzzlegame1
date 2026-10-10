@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="スワップ4">
 <meta name="theme-color" content="#E4E8F0">
 <style>
 *{box-sizing:border-box}
@@ -13,6 +14,9 @@ body{margin:0;font-size:14px}
 [hidden]{display:none!important}
 </style>
 <title>スワップ4</title>
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
@@ -53,7 +57,7 @@ header{display:flex;align-items:flex-end;gap:14px}
 #field{display:block;background:var(--field);border-radius:5px}
 
 .controls{display:flex;justify-content:space-between;align-items:center;height:clamp(132px,23vh,184px);padding-inline:4px}
-#pad{position:relative;width:clamp(120px,36vw,156px);aspect-ratio:1;max-width:100%;border-radius:50%;background:radial-gradient(circle at 50% 38%,var(--pad-2),var(--pad) 70%);box-shadow:0 6px 0 #14161D,inset 0 2px 0 rgba(255,255,255,.12);touch-action:none}
+#pad{position:relative;width:clamp(108px,34vw,156px);aspect-ratio:1;max-width:100%;border-radius:50%;background:radial-gradient(circle at 50% 38%,var(--pad-2),var(--pad) 70%);box-shadow:0 6px 0 #14161D,inset 0 2px 0 rgba(255,255,255,.12);touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:34%;aspect-ratio:1;margin:-17% 0 0 -17%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#5B6278,#30343F);box-shadow:0 3px 0 #14161D;transition:transform .06s;pointer-events:none}
 .arrow{position:absolute;width:0;height:0;border:9px solid transparent;opacity:.55;pointer-events:none;transition:opacity .06s}
 .arrow.on{opacity:1}
@@ -62,13 +66,31 @@ header{display:flex;align-items:flex-end;gap:14px}
 .a-left{top:50%;left:9%;margin-top:-9px;border-right:12px solid #fff;border-left:0}
 .a-right{top:50%;right:9%;margin-top:-9px;border-left:12px solid #fff;border-right:0}
 
-#swap{width:clamp(96px,28vw,124px);aspect-ratio:1;max-width:100%;border-radius:50%;border:0;background:radial-gradient(circle at 45% 35%,#FF6B73,var(--swap) 60%);color:#fff;box-shadow:0 7px 0 var(--swap-dark),inset 0 2px 0 rgba(255,255,255,.25);font-family:var(--display);font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;touch-action:none;transition:transform .05s,box-shadow .05s}
+#swap{width:clamp(88px,27vw,124px);aspect-ratio:1;max-width:100%;border-radius:50%;border:0;background:radial-gradient(circle at 45% 35%,#FF6B73,var(--swap) 60%);color:#fff;box-shadow:0 7px 0 var(--swap-dark),inset 0 2px 0 rgba(255,255,255,.25);font-family:var(--display);font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;touch-action:none;transition:transform .05s,box-shadow .05s}
 #swap .sym{font-size:26px;line-height:1}
 #swap.down{transform:translateY(5px);box-shadow:0 2px 0 var(--swap-dark),inset 0 2px 0 rgba(255,255,255,.25)}
 
+/* buddy: 操作ボタンの間（後ろ）でスマホを遊ぶキャラクター */
+.controls{position:relative}
+#pad,#swap{z-index:1}
+.buddy{position:absolute;left:50%;bottom:-6px;width:min(52vw,250px);aspect-ratio:3/2;transform:translateX(-50%);pointer-events:none;z-index:0}
+.win{position:absolute;inset:0;transform-origin:50% 100%;-webkit-mask-image:linear-gradient(#000 82%,transparent);mask-image:linear-gradient(#000 82%,transparent)}
+.face{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;opacity:0;transition:opacity .08s}
+.face.on{opacity:1}
+.buddy.happy .win{animation:hop .5s ease-out}
+.buddy.joy .win{animation:hop .45s ease-out 2}
+.buddy.shock .win{animation:jit .14s linear infinite}
+.buddy.idle-bob .win{animation:bob 2.4s ease-in-out infinite}
+@keyframes hop{0%{transform:none}30%{transform:translateY(-14px) rotate(-3deg)}60%{transform:translateY(0) rotate(2deg)}80%{transform:translateY(-5px)}100%{transform:none}}
+@keyframes jit{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+@keyframes bob{0%,100%{transform:none}50%{transform:translateY(-2px)}}
+@media (prefers-reduced-motion:reduce){.buddy .win{animation:none!important}}
+
+.appicon{width:84px;height:84px;border-radius:20px;display:block;margin:0 auto;box-shadow:0 0 0 3px var(--ink)}
+
 /* overlays */
-.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding-inline:16px;background:rgba(228,232,240,.86);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:5}
-.panel{width:100%;max-width:360px;background:var(--field);border-radius:18px;box-shadow:0 0 0 3px var(--ink),0 8px 0 3px var(--body-2);padding:22px 20px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
+.overlay{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding-inline:16px;padding-block:16px;background:rgba(228,232,240,.86);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:5}
+.panel{margin:auto;width:100%;max-width:360px;background:var(--field);border-radius:18px;box-shadow:0 0 0 3px var(--ink),0 8px 0 3px var(--body-2);padding:22px 20px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
 .logo{font-family:var(--display);font-size:38px;line-height:1;text-align:center;letter-spacing:.02em}
 .logo .four{display:inline-block;background:var(--swap);color:#fff;border-radius:10px;padding:2px 10px;margin-left:4px;transform:rotate(-4deg)}
 .swatches{display:flex;justify-content:center;gap:6px}
@@ -88,6 +110,12 @@ header{display:flex;align-items:flex-end;gap:14px}
 .result{display:flex;justify-content:space-around;text-align:center}
 .result .val{font-size:30px}
 h2{font-family:var(--display);font-size:28px;margin:0;text-align:center;font-weight:400}
+h2.best{color:var(--swap)}
+.rankbox{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.rankbox .mine{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+.rankbox .status{font-size:11px;font-weight:700;color:var(--muted);line-height:1.5}
+.rankbtn{border:0;border-radius:12px;background:var(--body);color:var(--ink);font:800 15px var(--text);padding:11px;cursor:pointer;box-shadow:inset 0 0 0 2px var(--body-2)}
+.note{font-size:11px;font-weight:700;color:var(--muted);text-align:center;margin:0;line-height:1.5}
 @media (prefers-reduced-motion:reduce){#frame.shake{animation:none}}
 </style>
 </head>
@@ -114,22 +142,35 @@ h2{font-family:var(--display);font-size:28px;margin:0;text-align:center;font-wei
       <span class="arrow a-right" data-d="right"></span>
       <div id="knob"></div>
     </div>
+    <div class="buddy idle-bob" id="buddy" aria-hidden="true">
+      <div class="win">
+        <img class="face on" data-f="idle" src="img/chara-idle.webp" alt="">
+        <img class="face" data-f="cheer" src="img/chara-cheer.webp" alt="">
+        <img class="face" data-f="shock" src="img/chara-panic.webp" alt="">
+      </div>
+    </div>
     <button id="swap" aria-label="入れ替え"><span class="sym">⇄</span><span>入替</span></button>
   </div>
 
   <!-- start -->
-  <div class="overlay" id="startOv">
+  <div class="overlay" id="startOv" hidden>
     <div class="panel">
+      <img class="appicon" src="icons/icon-180.png" alt="">
       <div class="logo">スワップ<span class="four">4</span></div>
       <div class="swatches" id="swatches"></div>
       <p class="howto">左のパッドでカーソルを動かし、右のボタンで左右を入れ替え。<br>同じ色を縦か横に4つ並べると消えます。<br>ブロックが一番上に届いたらゲームオーバー。</p>
       <div class="modes" id="modes">
-        <button class="mode" data-mode="easy"><b>初級</b><span class="desc">4色 ・ スコア×1</span><span class="mbest"></span></button>
-        <button class="mode" data-mode="normal"><b>中級</b><span class="desc">5色 ・ スコア×1.5</span><span class="mbest"></span></button>
-        <button class="mode" data-mode="hard"><b>上級</b><span class="desc">6色 ・ スコア×2</span><span class="mbest"></span></button>
-        <button class="mode endless" data-mode="endless"><b>無限モード</b><span class="desc">6色 ・ 速さ一定 ・ スコアは参考値</span><span class="mbest"></span></button>
+        <button class="mode" data-mode="easy"><b>初級</b><span class="desc">4色 ・ スコア×1</span></button>
+        <button class="mode" data-mode="normal"><b>中級</b><span class="desc">5色 ・ スコア×1.5</span></button>
+        <button class="mode" data-mode="hard"><b>上級</b><span class="desc">6色 ・ スコア×2</span></button>
+        <button class="mode endless" data-mode="endless"><b>無限モード</b><span class="desc">6色 ・ 速さ一定 ・ ランキング対象外</span><span class="mbest" id="endlessBest"></span></button>
+      </div>
+      <div class="rankbox">
+        <span class="mine" id="tRankMine"></span>
+        <span class="status" id="tRankStatus"></span>
       </div>
       <button class="big" id="startBtn">スタート</button>
+      <button class="rankbtn" id="tRankBtn">🏆 ランキング</button>
     </div>
   </div>
 
@@ -145,18 +186,26 @@ h2{font-family:var(--display);font-size:28px;margin:0;text-align:center;font-wei
   <!-- game over -->
   <div class="overlay" id="overOv" hidden>
     <div class="panel">
-      <h2>ゲームオーバー</h2>
+      <h2 id="overTitle">ゲームオーバー</h2>
       <div class="result">
         <div class="stat"><span class="lab" id="rScoreLab">SCORE</span><span class="val" id="rScore">0</span></div>
         <div class="stat"><span class="lab">最大連鎖</span><span class="val" id="rChain">0</span></div>
       </div>
-      <div class="stat" style="align-items:center"><span class="lab" id="rBest">BEST 0</span></div>
+      <div class="rankbox" id="oRankBox">
+        <span class="mine" id="oRankMine"></span>
+        <span class="status" id="oRankStatus"></span>
+      </div>
+      <p class="note" id="oEndless" hidden></p>
       <button class="big" id="retryBtn">もう一度</button>
+      <button class="rankbtn" id="oRankBtn">🏆 ランキング</button>
       <button class="sub" id="titleBtn">難易度を変える</button>
     </div>
   </div>
 </div>
 
+<script src="config.js"></script>
+<script src="maruo-opening.js"></script>
+<script src="maruo-ranking.js"></script>
 <script>
 (() => {
 /* ===== 調整用の定数 ===== */
@@ -199,7 +248,27 @@ const store = {
 };
 const cfg = { mode: store.get('swap4.mode', 'easy') };
 if (!MODES[cfg.mode]) cfg.mode = 'easy';
-const bests = Object.assign({ easy:0, normal:0, hard:0, endless:0 }, store.get('swap4.bests', {}));
+// 無限モードはランキング対象外。参考記録だけ端末に残す
+let endlessRef = store.get('swap4.endless-ref', { score:0, time:0 });
+
+/* ===== まるおゲーム共通キット ===== */
+const GAME_ID = 'swap4';                // 公開後は変えない
+const CONF = window.MARUO_CONFIG || {};
+let ranking;
+try {
+  ranking = MaruoRanking.init({ gameId: GAME_ID, supabaseUrl: CONF.SUPABASE_URL, supabaseKey: CONF.SUPABASE_KEY });
+} catch (err) {
+  // maruo-ranking.js が読み込めないときもゲームは遊べるようにする
+  console.error('maruo-ranking.js を読み込めませんでした', err);
+  ranking = {
+    reportScore: n => ({ score:n, best:0, isBest:false }), getBest: () => 0,
+    getSummary: () => ({ best:0, rank:null, status:'ランキング機能を読み込めませんでした' }),
+    onChange: () => () => {}, openPanel: () => Promise.resolve(), isPanelOpen: () => false
+  };
+}
+const openingPlaying = () => !!(window.MaruoOpening && MaruoOpening.isPlaying());
+// オープニング中・ランキング画面表示中は操作を受け付けない
+const blocked = () => openingPlaying() || ranking.isPanelOpen();
 
 /* ===== DOM ===== */
 const $ = id => document.getElementById(id);
@@ -211,7 +280,7 @@ function refreshHeader(){
   const M = MODES[cfg.mode];
   elModeName.textContent = M.label;
   elLevelLab.textContent = M.grow ? 'LEVEL' : 'TIME';
-  elBest.textContent = bests[cfg.mode];
+  elBest.textContent = M.grow ? ranking.getBest() : endlessRef.score;
 }
 const fmtTime = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 
@@ -341,6 +410,7 @@ function checkMatches(){
     S.stop = Math.max(S.stop, 0.8 + 0.35*(S.chain-1));
     S.popups.push({ x:(sx/n + .5), y:(sy/n + .5), text: S.chain > 1 ? `${S.chain}連鎖!` : `+${pts}`, sub: S.chain > 1 ? `+${pts}` : (n > MATCH ? `${n}個消し` : ''), t:0 });
     try { navigator.vibrate && navigator.vibrate(S.chain > 1 ? [15,40,15] : 12); } catch(e){}
+    buddyCheer(S.chain, n);
   } else if (!anyClearing()){
     S.pendingChain = false;
   }
@@ -415,14 +485,14 @@ function update(dt){
 
 /* ===== 操作 ===== */
 function moveCursor(d){
-  if (!S || S.mode !== 'play') return;
+  if (blocked() || !S || S.mode !== 'play') return;
   if (d === 'left')  S.cx = Math.max(0, S.cx-1);
   if (d === 'right') S.cx = Math.min(S.cols-2, S.cx+1);
   if (d === 'up')    S.cy = Math.max(0, S.cy-1);
   if (d === 'down')  S.cy = Math.min(S.rows-1, S.cy+1);
 }
 function doSwap(){
-  if (!S || S.mode !== 'play') return;
+  if (blocked() || !S || S.mode !== 'play') return;
   const a = idx(S.cy, S.cx), b = a + 1;
   if (S.clr[a] > 0 || S.clr[b] > 0) return;
   if (S.grid[a] < 0 && S.grid[b] < 0) return;
@@ -457,7 +527,7 @@ function setPadDir(d){
   }
   arrows.forEach(a => a.classList.toggle('on', a.dataset.d === d));
 }
-pad.addEventListener('pointerdown', e => { e.preventDefault(); padPointer = e.pointerId; try{ pad.setPointerCapture(e.pointerId); }catch(_){} setPadDir(padDirFrom(e)); });
+pad.addEventListener('pointerdown', e => { e.preventDefault(); if (blocked()) return; padPointer = e.pointerId; try{ pad.setPointerCapture(e.pointerId); }catch(_){} setPadDir(padDirFrom(e)); });
 pad.addEventListener('pointermove', e => { if (e.pointerId === padPointer) setPadDir(padDirFrom(e)); });
 const padEnd = e => { if (e.pointerId !== padPointer) return; padPointer = null; knob.style.transform = ''; setPadDir(null); };
 pad.addEventListener('pointerup', padEnd);
@@ -465,13 +535,14 @@ pad.addEventListener('pointercancel', padEnd);
 
 /* 入替ボタン */
 const swapBtn = $('swap');
-swapBtn.addEventListener('pointerdown', e => { e.preventDefault(); swapBtn.classList.add('down'); doSwap(); });
+swapBtn.addEventListener('pointerdown', e => { e.preventDefault(); if (blocked()) return; swapBtn.classList.add('down'); doSwap(); });
 ['pointerup','pointercancel','pointerleave'].forEach(t => swapBtn.addEventListener(t, () => swapBtn.classList.remove('down')));
 swapBtn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doSwap(); } });
 
 /* キーボード（PCで試す用） */
 const keyMap = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down', a:'left', d:'right', w:'up', s:'down' };
 window.addEventListener('keydown', e => {
+  if (blocked()) return;
   if (keyMap[e.key]){ e.preventDefault(); moveCursor(keyMap[e.key]); }
   else if (e.key === ' ' || e.key === 'z' || e.key === 'x'){ e.preventDefault(); doSwap(); }
   else if (e.key === 'Escape' || e.key === 'p'){ if (S && S.mode === 'play') pause(); else if (S && S.mode === 'pause') resume(); }
@@ -606,13 +677,60 @@ function draw(){
   }
 }
 
+/* ===== キャラクターの反応 ===== */
+const buddy = $('buddy');
+const faces = [...buddy.querySelectorAll('.face')];
+let buddyT = 0, buddyState = 'idle';
+const pick = a => a[Math.floor(Math.random()*a.length)];
+function setFace(f){
+  const key = (f === 'happy' || f === 'joy') ? 'cheer' : f;
+  faces.forEach(i => i.classList.toggle('on', i.dataset.f === key));
+  buddy.classList.toggle('idle-bob', key === 'idle');
+}
+function buddySay(t){ /* セリフ演出なし */ }
+function buddyQuiet(){}
+function buddyCheer(chain, n){
+  const big = chain >= 2 || n >= 6;
+  buddy.classList.remove('happy','joy','shock');
+  void buddy.offsetWidth;               // アニメーションを毎回やり直す
+  buddy.classList.add(big ? 'joy' : 'happy');
+  setFace(big ? 'joy' : 'happy');
+  if (chain >= 2) buddySay(`${chain}連鎖！すごい！`);
+  else if (n >= 6) buddySay(`${n}個も消えた！`);
+  else buddySay(pick(['やった！','いいね！','きもちいい！','その調子！','えいっ！']));
+  buddyT = big ? 1.4 : 1.0;
+  buddyState = 'cheer';
+}
+function buddyTick(dt){
+  if (buddyT > 0){
+    buddyT -= dt;
+    if (buddyT > 0) return;
+    buddy.classList.remove('happy','joy');
+    buddyState = 'reset';
+  }
+  const danger = S && S.mode === 'play' && S.danger > 0;
+  const want = danger ? 'shock' : 'idle';
+  if (want !== buddyState){
+    buddyState = want;
+    buddy.classList.toggle('shock', danger);
+    setFace(want);
+    if (danger) buddySay('あぶない！'); else buddyQuiet();
+  }
+}
+function buddyReset(face='idle', say=''){
+  buddyT = 0; buddyState = face;
+  buddy.classList.remove('happy','joy','shock');
+  setFace(face);
+  if (say) buddySay(say); else buddyQuiet();
+}
+
 /* ===== 画面遷移 ===== */
 let last = 0, raf = 0;
 function loop(t){
   raf = requestAnimationFrame(loop);
   const dt = Math.min(0.05, (t - last)/1000 || 0); last = t;
   try {
-    if (S && S.mode === 'play') update(dt);
+    if (S && S.mode === 'play'){ update(dt); buddyTick(dt); }
     draw();
   } catch (err) { console.error(err); }
 }
@@ -621,6 +739,8 @@ function start(){
   store.set('swap4.mode', cfg.mode);
   S = newState(); fillInitial(); S.mode = 'play';
   refreshHeader();
+  buddyReset('idle', 'がんばろう！');
+  buddyT = 1.2; buddyState = 'cheer';
   elScore.textContent = 0; elLevel.textContent = S.M.grow ? 1 : fmtTime(0);
   $('startOv').hidden = true; $('overOv').hidden = true; $('pauseOv').hidden = true;
   layout();
@@ -630,25 +750,50 @@ function resume(){ S.mode = 'play'; $('pauseOv').hidden = true; }
 function toTitle(){
   if (S) S.mode = 'title';
   frame.classList.remove('shake');
+  buddyReset('idle');
   $('pauseOv').hidden = true; $('overOv').hidden = true; $('startOv').hidden = false;
 }
 function gameOver(){
   S.mode = 'over'; setPadDir(null);
   frame.classList.remove('shake');
-  const key = cfg.mode, endless = !S.M.grow;
-  let isNew = false;
-  if (S.score > bests[key]){ bests[key] = S.score; store.set('swap4.bests', bests); isNew = true; }
-  refreshHeader(); renderSettings();
+  buddyReset('shock', 'あ〜っ、ざんねん…');
+  const endless = !S.M.grow;
+  let isBest = false;
+  if (endless){
+    // 参考値：ランキングには送らない
+    if (S.score > endlessRef.score) endlessRef.score = S.score;
+    if (S.time > endlessRef.time) endlessRef.time = S.time;
+    store.set('swap4.endless-ref', endlessRef);
+    $('oEndless').textContent = `無限モードはランキング対象外です（${fmtTime(S.time)} 生存 ／ 参考ベスト ${endlessRef.score}）`;
+  } else {
+    isBest = ranking.reportScore(S.score).isBest;
+  }
+  $('overTitle').textContent = isBest ? '自己ベスト更新！' : 'ゲームオーバー';
+  $('overTitle').classList.toggle('best', isBest);
+  $('oRankBox').hidden = endless; $('oEndless').hidden = !endless;
   $('rScoreLab').textContent = endless ? 'スコア（参考値）' : `${S.M.label} SCORE`;
   $('rScore').textContent = S.score;
   $('rChain').textContent = S.maxChain;
-  $('rBest').textContent = (isNew ? 'ベスト更新！ ' : '') + `${S.M.label}のBEST ${bests[key]}` + (endless ? `（${fmtTime(S.time)} 生存）` : `（LEVEL ${S.level}）`);
+  refreshHeader(); renderSettings(); showRank(ranking.getSummary());
   setTimeout(() => { $('overOv').hidden = false; }, 500);
 }
 
-$('startBtn').onclick = start;
-$('retryBtn').onclick = start;
-$('titleBtn').onclick = toTitle;
+const guarded = fn => () => { if (!blocked()) fn(); };
+$('startBtn').onclick = guarded(start);
+$('retryBtn').onclick = guarded(start);
+$('titleBtn').onclick = guarded(toTitle);
+$('tRankBtn').onclick = guarded(() => ranking.openPanel());
+$('oRankBtn').onclick = guarded(() => ranking.openPanel());
+
+/* 自己ベスト・全体順位・通信状況の表示 */
+function showRank(s){
+  const mine = `自己ベスト ${s.best}` + (s.rank ? ` ／ 全体 ${s.rank}位` : '');
+  $('tRankMine').textContent = mine; $('oRankMine').textContent = mine;
+  $('tRankStatus').textContent = s.status; $('oRankStatus').textContent = s.status;
+  if (!S || MODES[cfg.mode].grow) elBest.textContent = s.best;
+}
+showRank(ranking.getSummary());
+ranking.onChange(showRank);
 $('pauseBtn').onclick = () => { if (S && S.mode === 'play') pause(); };
 $('resumeBtn').onclick = resume;
 $('quitBtn').onclick = toTitle;
@@ -658,11 +803,12 @@ function renderSettings(){
   document.querySelectorAll('.mode').forEach(b => {
     const m = b.dataset.mode;
     b.setAttribute('aria-pressed', String(m === cfg.mode));
-    b.querySelector('.mbest').textContent = `BEST ${bests[m]}`;
   });
+  $('endlessBest').textContent = `参考ベスト ${endlessRef.score}`;
   $('swatches').innerHTML = COLORS.slice(0, MODES[cfg.mode].ncol).map(c => `<i style="background:${c.fill}"></i>`).join('');
 }
 $('modes').addEventListener('click', e => {
+  if (blocked()) return;
   const b = e.target.closest('.mode'); if (!b) return;
   cfg.mode = b.dataset.mode;
   store.set('swap4.mode', cfg.mode);
@@ -672,7 +818,17 @@ renderSettings();
 refreshHeader();
 layout();
 raf = requestAnimationFrame(loop);
+
+/* 起動：まるおゲームのオープニング → タイトル */
+const showTitle = () => { $('startOv').hidden = false; };
+if (window.MaruoOpening) MaruoOpening.play().then(showTitle, showTitle);
+else showTitle();
 })();
+
+/* オフライン対応（Service Worker） */
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW登録失敗', err)); });
+}
 </script>
 
 </body>
