@@ -1,6 +1,6 @@
 // スワップ4：オフライン用 Service Worker
 // ゲームを更新したら VERSION の数字を上げる（古いキャッシュが入れ替わります）
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = `swap4-${VERSION}`;
 const FONT_CACHE = 'swap4-fonts';
 
@@ -12,9 +12,9 @@ const ASSETS = [
   './maruo-opening.js',
   './maruo-ranking.js',
   './config.js',
-  './img/chara-idle.webp',
-  './img/chara-cheer.webp',
-  './img/chara-panic.webp',
+  './img/chara-idle.png',
+  './img/chara-cheer.png',
+  './img/chara-panic.png',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png'

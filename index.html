@@ -110,6 +110,7 @@ header{display:flex;align-items:flex-end;gap:14px}
 .result{display:flex;justify-content:space-around;text-align:center}
 .result .val{font-size:30px}
 h2{font-family:var(--display);font-size:28px;margin:0;text-align:center;font-weight:400}
+#app.boot > header,#app.boot > #wrap,#app.boot > .controls{visibility:hidden}
 h2.best{color:var(--swap)}
 .rankbox{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
 .rankbox .mine{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
@@ -122,7 +123,7 @@ h2.best{color:var(--swap)}
 <body>
 
 
-<div id="app">
+<div id="app" class="boot">
   <header>
     <div class="stat"><span class="lab">SCORE</span><span class="val" id="score">0</span></div>
     <div class="stat"><span class="lab">MODE</span><span class="val small" id="modeName">初級</span></div>
@@ -144,9 +145,9 @@ h2.best{color:var(--swap)}
     </div>
     <div class="buddy idle-bob" id="buddy" aria-hidden="true">
       <div class="win">
-        <img class="face on" data-f="idle" src="img/chara-idle.webp" alt="">
-        <img class="face" data-f="cheer" src="img/chara-cheer.webp" alt="">
-        <img class="face" data-f="shock" src="img/chara-panic.webp" alt="">
+        <img class="face on" data-f="idle" src="img/chara-idle.png" alt="" decoding="async">
+        <img class="face" data-f="cheer" src="img/chara-cheer.png" alt="" decoding="async">
+        <img class="face" data-f="shock" src="img/chara-panic.png" alt="" decoding="async">
       </div>
     </div>
     <button id="swap" aria-label="入れ替え"><span class="sym">⇄</span><span>入替</span></button>
@@ -820,7 +821,7 @@ layout();
 raf = requestAnimationFrame(loop);
 
 /* 起動：まるおゲームのオープニング → タイトル */
-const showTitle = () => { $('startOv').hidden = false; };
+const showTitle = () => { $('app').classList.remove('boot'); $('startOv').hidden = false; layout(); };
 if (window.MaruoOpening) MaruoOpening.play().then(showTitle, showTitle);
 else showTitle();
 })();
