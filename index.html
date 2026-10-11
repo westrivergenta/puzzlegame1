@@ -57,17 +57,17 @@ header{display:flex;align-items:flex-end;gap:14px}
 #field{display:block;background:var(--field);border-radius:5px}
 
 .controls{display:flex;justify-content:space-between;align-items:center;height:clamp(132px,23vh,184px);padding-inline:4px}
-#pad{position:relative;width:clamp(108px,34vw,156px);aspect-ratio:1;max-width:100%;border-radius:50%;background:radial-gradient(circle at 50% 38%,var(--pad-2),var(--pad) 70%);box-shadow:0 6px 0 #14161D,inset 0 2px 0 rgba(255,255,255,.12);touch-action:none}
+#pad{position:relative;width:clamp(88px,26vw,124px);aspect-ratio:1;max-width:100%;border-radius:50%;background:radial-gradient(circle at 50% 38%,var(--pad-2),var(--pad) 70%);box-shadow:0 6px 0 #14161D,inset 0 2px 0 rgba(255,255,255,.12);touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:34%;aspect-ratio:1;margin:-17% 0 0 -17%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#5B6278,#30343F);box-shadow:0 3px 0 #14161D;transition:transform .06s;pointer-events:none}
-.arrow{position:absolute;width:0;height:0;border:9px solid transparent;opacity:.55;pointer-events:none;transition:opacity .06s}
+.arrow{position:absolute;width:0;height:0;border:7px solid transparent;opacity:.55;pointer-events:none;transition:opacity .06s}
 .arrow.on{opacity:1}
-.a-up{left:50%;top:9%;margin-left:-9px;border-bottom:12px solid #fff;border-top:0}
-.a-down{left:50%;bottom:9%;margin-left:-9px;border-top:12px solid #fff;border-bottom:0}
-.a-left{top:50%;left:9%;margin-top:-9px;border-right:12px solid #fff;border-left:0}
-.a-right{top:50%;right:9%;margin-top:-9px;border-left:12px solid #fff;border-right:0}
+.a-up{left:50%;top:9%;margin-left:-7px;border-bottom:10px solid #fff;border-top:0}
+.a-down{left:50%;bottom:9%;margin-left:-7px;border-top:10px solid #fff;border-bottom:0}
+.a-left{top:50%;left:9%;margin-top:-7px;border-right:10px solid #fff;border-left:0}
+.a-right{top:50%;right:9%;margin-top:-7px;border-left:10px solid #fff;border-right:0}
 
-#swap{width:clamp(88px,27vw,124px);aspect-ratio:1;max-width:100%;border-radius:50%;border:0;background:radial-gradient(circle at 45% 35%,#FF6B73,var(--swap) 60%);color:#fff;box-shadow:0 7px 0 var(--swap-dark),inset 0 2px 0 rgba(255,255,255,.25);font-family:var(--display);font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;touch-action:none;transition:transform .05s,box-shadow .05s}
-#swap .sym{font-size:26px;line-height:1}
+#swap{width:clamp(70px,20vw,96px);aspect-ratio:1;max-width:100%;border-radius:50%;border:0;background:radial-gradient(circle at 45% 35%,#FF6B73,var(--swap) 60%);color:#fff;box-shadow:0 7px 0 var(--swap-dark),inset 0 2px 0 rgba(255,255,255,.25);font-family:var(--display);font-size:15px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;touch-action:none;transition:transform .05s,box-shadow .05s}
+#swap .sym{font-size:21px;line-height:1}
 #swap.down{transform:translateY(5px);box-shadow:0 2px 0 var(--swap-dark),inset 0 2px 0 rgba(255,255,255,.25)}
 
 /* buddy: 操作ボタンの間（後ろ）でスマホを遊ぶキャラクター */
