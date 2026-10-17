@@ -1,6 +1,6 @@
 // スワップ4：オフライン用 Service Worker
 // ゲームを更新したら VERSION の数字を上げる（古いキャッシュが入れ替わります）
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE = `swap4-${VERSION}`;
 const FONT_CACHE = 'swap4-fonts';
 
