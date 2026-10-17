@@ -73,6 +73,12 @@ header{display:flex;align-items:flex-end;gap:14px}
 /* buddy: 操作ボタンの間（後ろ）でスマホを遊ぶキャラクター */
 .controls{position:relative}
 #pad,#swap{z-index:1}
+#pad{pointer-events:none}
+/* 指を置いた場所が中心になる操作エリア（左側の広い範囲） */
+#padZone{position:absolute;left:0;top:-8px;bottom:0;width:50%;z-index:2;touch-action:none;-webkit-user-select:none;user-select:none}
+#floatBase{position:absolute;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:rgba(42,46,58,.18);box-shadow:inset 0 0 0 2px rgba(42,46,58,.35);pointer-events:none}
+#floatKnob{position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#5B6278,#30343F);box-shadow:0 3px 0 #14161D;pointer-events:none}
+#pad.active{opacity:.45}
 .buddy{position:absolute;left:50%;bottom:-6px;width:min(52vw,250px);aspect-ratio:3/2;transform:translateX(-50%);pointer-events:none;z-index:0}
 .win{position:absolute;inset:0;transform-origin:50% 100%;-webkit-mask-image:linear-gradient(#000 82%,transparent);mask-image:linear-gradient(#000 82%,transparent)}
 .face{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;opacity:0;transition:opacity .08s}
@@ -136,7 +142,10 @@ h2.best{color:var(--swap)}
   <div id="wrap"><div id="frame"><canvas id="field"></canvas></div></div>
 
   <div class="controls">
-    <div id="pad" role="group" aria-label="カーソル移動">
+    <div id="padZone" aria-label="カーソル移動エリア">
+      <div id="floatBase" hidden><div id="floatKnob"></div></div>
+    </div>
+    <div id="pad" aria-hidden="true">
       <span class="arrow a-up" data-d="up"></span>
       <span class="arrow a-down" data-d="down"></span>
       <span class="arrow a-left" data-d="left"></span>
@@ -159,7 +168,7 @@ h2.best{color:var(--swap)}
       <img class="appicon" src="icons/icon-180.png" alt="">
       <div class="logo">スワップ<span class="four">4</span></div>
       <div class="swatches" id="swatches"></div>
-      <p class="howto">左のパッドでカーソルを動かし、右のボタンで左右を入れ替え。<br>同じ色を縦か横に4つ並べると消えます。<br>ブロックが一番上に届いたらゲームオーバー。</p>
+      <p class="howto">左側を指でなぞってカーソルを動かし、右のボタンで左右を入れ替え。<br>同じ色を縦か横に4つ並べると消えます。<br>ブロックが一番上に届いたらゲームオーバー。</p>
       <div class="modes" id="modes">
         <button class="mode" data-mode="easy"><b>初級</b><span class="desc">4色 ・ スコア×1</span></button>
         <button class="mode" data-mode="normal"><b>中級</b><span class="desc">5色 ・ スコア×1.5</span></button>
@@ -231,10 +240,8 @@ const LEVEL_SEC = 20;                 // 何秒ごとにレベルが上がるか
 const LEVEL_GAIN = 0.12;              // レベル1つごとの速度上昇率
 const ENDLESS_SPEED = 0.12;           // 無限モードの速さ（一定）
 /* カーソル感度 */
-const PAD_DEADZONE = 0.38;            // 中心からこの割合までは反応しない
-const PAD_HOLD_DELAY = 0.38;          // 押しっぱなしで連続移動が始まるまで（秒）
-const PAD_REPEAT = 0.17;              // 連続移動の間隔（秒）
-const PAD_SWITCH = 1.6;               // 方向を切り替えるのに必要な縦横の差（倍率）
+const STICK_STEP = 26;                // 指をこの距離（px）動かすごとにカーソルが1マス動く。小さいほど敏感
+const STICK_KNOB_MAX = 30;            // 表示上のスティックが動く最大距離（px）
 const MATCH = 4;                      // 何個並ぶと消えるか
 const CLEAR_T = 0.5;                  // 消える演出の時間（秒）
 const GRAV_STEP = 0.055;              // 1マス落ちる時間（秒）
@@ -477,7 +484,6 @@ function update(dt){
   for (const p of S.popups) p.t += dt;
   S.popups = S.popups.filter(p => p.t < 1);
 
-  if (S.padDir && S.time >= S.padNext){ moveCursor(S.padDir); S.padNext = S.time + PAD_REPEAT; }
 
   frame.classList.toggle('shake', S.danger > 0);
   elScore.textContent = S.score;
@@ -502,37 +508,54 @@ function doSwap(){
   S.swap = { r:S.cy, c:S.cx, t:0 };
 }
 
-/* 円形パッド */
-const pad = $('pad'), knob = $('knob');
+/* 操作エリア：指を置いた場所を起点に、動かした分だけカーソルが動く */
+const pad = $('pad'), knob = $('knob'), zone = $('padZone');
+const floatBase = $('floatBase'), floatKnob = $('floatKnob');
 const arrows = [...pad.querySelectorAll('.arrow')];
-let padPointer = null;
-function padDirFrom(e){
-  const r = pad.getBoundingClientRect();
-  const dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
-  const dist = Math.hypot(dx, dy), rad = r.width/2;
-  const k = Math.min(1, dist/rad) * 0.28 * r.width;
-  knob.style.transform = dist > 0 ? `translate(${dx/dist*k}px, ${dy/dist*k}px)` : '';
-  if (dist < rad*PAD_DEADZONE) return null;
-  const ax = Math.abs(dx), ay = Math.abs(dy);
-  const cur = S && S.padDir;
-  // 今の方向を保ちやすくする（斜めに少しずれただけでは切り替わらない）
-  if (cur === 'left' || cur === 'right'){ if (ay < ax*PAD_SWITCH) return dx > 0 ? 'right' : 'left'; }
-  if (cur === 'up' || cur === 'down'){ if (ax < ay*PAD_SWITCH) return dy > 0 ? 'down' : 'up'; }
-  return ax > ay ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+let stick = null;   // { id, ox, oy, ax, ay }  ox,oy=指を置いた点 / ax,ay=次の1マスを数える基準点
+const flashTimers = {};
+function flashArrow(d){
+  const el = arrows.find(a => a.dataset.d === d); if (!el) return;
+  el.classList.add('on'); clearTimeout(flashTimers[d]);
+  flashTimers[d] = setTimeout(() => el.classList.remove('on'), 120);
 }
-function setPadDir(d){
-  if (!S) return;
-  if (d !== S.padDir){
-    S.padDir = d;
-    if (d){ moveCursor(d); S.padNext = S.time + PAD_HOLD_DELAY; }
-  }
-  arrows.forEach(a => a.classList.toggle('on', a.dataset.d === d));
+function stepMove(d){ moveCursor(d); flashArrow(d); }
+function zonePoint(e){ const r = zone.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function setPadDir(){            // 一時停止・ゲームオーバー時に操作をリセット
+  stick = null; floatBase.hidden = true; pad.classList.remove('active');
+  knob.style.transform = ''; arrows.forEach(a => a.classList.remove('on'));
 }
-pad.addEventListener('pointerdown', e => { e.preventDefault(); if (blocked()) return; padPointer = e.pointerId; try{ pad.setPointerCapture(e.pointerId); }catch(_){} setPadDir(padDirFrom(e)); });
-pad.addEventListener('pointermove', e => { if (e.pointerId === padPointer) setPadDir(padDirFrom(e)); });
-const padEnd = e => { if (e.pointerId !== padPointer) return; padPointer = null; knob.style.transform = ''; setPadDir(null); };
-pad.addEventListener('pointerup', padEnd);
-pad.addEventListener('pointercancel', padEnd);
+zone.addEventListener('pointerdown', e => {
+  e.preventDefault(); if (blocked() || stick) return;
+  const p = zonePoint(e);
+  stick = { id: e.pointerId, ox: p.x, oy: p.y, ax: p.x, ay: p.y };
+  try { zone.setPointerCapture(e.pointerId); } catch(_){}
+  floatBase.style.left = p.x + 'px'; floatBase.style.top = p.y + 'px';
+  floatKnob.style.transform = '';
+  floatBase.hidden = false; pad.classList.add('active');
+});
+zone.addEventListener('pointermove', e => {
+  if (!stick || e.pointerId !== stick.id) return;
+  if (blocked()){ setPadDir(); return; }
+  const p = zonePoint(e);
+  // 横：STICK_STEP 進むごとに1マス
+  while (p.x - stick.ax >=  STICK_STEP){ stick.ax += STICK_STEP; stepMove('right'); }
+  while (p.x - stick.ax <= -STICK_STEP){ stick.ax -= STICK_STEP; stepMove('left'); }
+  // 縦
+  while (p.y - stick.ay >=  STICK_STEP){ stick.ay += STICK_STEP; stepMove('down'); }
+  while (p.y - stick.ay <= -STICK_STEP){ stick.ay -= STICK_STEP; stepMove('up'); }
+  // 見た目のスティック（指を置いた点からのずれ）
+  let dx = p.x - stick.ox, dy = p.y - stick.oy;
+  const d = Math.hypot(dx, dy);
+  if (d > STICK_KNOB_MAX){ dx *= STICK_KNOB_MAX/d; dy *= STICK_KNOB_MAX/d; }
+  floatKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+  const k = 0.28 * pad.offsetWidth / STICK_KNOB_MAX;
+  knob.style.transform = `translate(${dx*k}px, ${dy*k}px)`;
+});
+const stickEnd = e => { if (stick && e.pointerId === stick.id) setPadDir(); };
+zone.addEventListener('pointerup', stickEnd);
+zone.addEventListener('pointercancel', stickEnd);
+zone.addEventListener('lostpointercapture', stickEnd);
 
 /* 入替ボタン */
 const swapBtn = $('swap');
